@@ -1,4 +1,5 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 
@@ -12,6 +13,19 @@ const products = [
 app.route('/products')
     .get((req, res) => {
         res.json(products)
+    })
+    .post((req, res) => {
+        let newProduct = req.body;
+        // Input Validation
+        if( !newProduct.coin || !newProduct.price || !newProduct.title){
+            // Bad Request
+            res.status(400).send("Required Fields: title, price, and coin");
+            return;
+        }
+        newProduct.id = uuidv4();
+        products.push(newProduct);
+        // Created Product
+        res.status(201).json(newProduct);
     })
 
 app.get('/products/:id', (req, res) => {
