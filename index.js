@@ -1,5 +1,6 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
+const _ = require('underscore');
 
 const app = express();
 
@@ -32,20 +33,40 @@ app.route('/products')
         res.status(201).json(newProduct);
     })
 
-app.get('/products/:id', (req, res) => {
-    for(let product of products){
-        if(product.id == req.params.id){
-            res.json(product);
+app.route('/products/:id')
+    .get((req, res) => {
+        for(let product of products){
+            if(product.id == req.params.id){
+                res.json(product);
+                return;
+            }
+        }
+        res.status(404).send(`The product with id : [${req.params.id}] is not found.`);
+    })
+    .put((req, res) => {
+        let id = req.params.id;
+        let updatedProduct = req.body;
+        if(!updatedProduct.coin || !updatedProduct.price || !updatedProduct.title){
+            // Bad request
+            res.status(400).send("Fields required: title, price and coin");
             return;
         }
-    }
-    res.status(404).send(`The product with id : [${req.params.id}] is not found.`);
-})
+        let index = _.findIndex(products, product => product.id == id);
+        if(index !== -1){
+            // Udpage the product
+            updatedProduct.id = id;
+            products[index] = updatedProduct;
+            res.status(200).json(updatedProduct);
+        } else {
+            res.status(404).send(`The product with id : [${id}] was not found.`);
+        }
+    })
+
 
 app.get('/', (req, res) => {
     res.send('API of shop online')
 })
 
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
+app.listen(3002, () => {
+    console.log('Server running on port 3002');
 })
