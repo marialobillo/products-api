@@ -10,6 +10,10 @@ const products = [
     { id: '1236', title: 'shoes', price: 90, coin: 'USD'}
 ];
 
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
 app.route('/products')
     .get((req, res) => {
         res.json(products)
