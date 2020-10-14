@@ -61,6 +61,17 @@ app.route('/products/:id')
             res.status(404).send(`The product with id : [${id}] was not found.`);
         }
     })
+    .delete((req, res) => {
+        let id = req.params.id;
+        let indexForDelete = _.findIndex(products, product => product.id == id);
+        if(indexForDelete === -1){
+            res.status(404).send(`Product with id: [${id}] does not exist.`);
+            return;
+        }
+
+        let deleted = products.splice(indexForDelete, 1);
+        res.json(deleted);
+    })
 
 
 app.get('/', (req, res) => {
