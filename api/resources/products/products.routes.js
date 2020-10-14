@@ -5,11 +5,10 @@ const _ = require('underscore');
 const products = require('./../../../database').products;
 const productsRouter = express.Router();
 
-productsRouter.route('/')
-    .get((req, res) => {
+productsRouter.get('/', (req, res) => {
         res.json(products)
     })
-    .post((req, res) => {
+productsRouter.post('/', (req, res) => {
         let newProduct = req.body;
         // Input Validation
         if( !newProduct.coin || !newProduct.price || !newProduct.title){
@@ -23,8 +22,7 @@ productsRouter.route('/')
         res.status(201).json(newProduct);
     })
 
-productsRouter.route('/:id')
-    .get((req, res) => {
+productsRouter.get('/:id', (req, res) => {
         for(let product of products){
             if(product.id == req.params.id){
                 res.json(product);
@@ -33,7 +31,7 @@ productsRouter.route('/:id')
         }
         res.status(404).send(`The product with id : [${req.params.id}] is not found.`);
     })
-    .put((req, res) => {
+productsRouter.put('/:id', (req, res) => {
         let id = req.params.id;
         let updatedProduct = req.body;
         if(!updatedProduct.coin || !updatedProduct.price || !updatedProduct.title){
@@ -51,7 +49,7 @@ productsRouter.route('/:id')
             res.status(404).send(`The product with id : [${id}] was not found.`);
         }
     })
-    .delete((req, res) => {
+productsRouter.delete('/:id', (req, res) => {
         let id = req.params.id;
         let indexForDelete = _.findIndex(products, product => product.id == id);
         if(indexForDelete === -1){
