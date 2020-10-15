@@ -1,12 +1,12 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const _ = require('underscore');
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 
 const products = require('./../../../database').products;
 const productsRouter = express.Router();
 
-const productSchema = Joi.object().keys({
+const productSchema = Joi.object({
     title: Joi.string().max(100).required(),
     price: Joi.number().positive().precision(2).required(),
     coin: Joi.string().length(3).uppercase().required()
