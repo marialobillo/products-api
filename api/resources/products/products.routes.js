@@ -1,21 +1,42 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const _ = require('underscore');
+const Joi = require('joi');
 
 const products = require('./../../../database').products;
 const productsRouter = express.Router();
 
+const productSchema = Joi.object().keys({
+    title: Joi.string().max(100).required(),
+    price: Joi.number().positive().precision(2).required(),
+    coin: Joi.string().length(3).uppercase().required()
+});
+
+const productValidation = (req, res, next) => {
+    const data = req.body;
+    const validation = productSchema.validate(data, {
+        abortEarly: false, 
+        convert: false
+    });
+
+    if(validation.error === undefined){
+        next()
+    } else {
+        let validationErrors = validation.error.details.reduce((acumulator, error) => {
+            return acumulator + `[${error.message}]`;
+        }, '');
+        console.log(validationErrors);
+        res.status(400).send(validationErrors);
+    }
+}
+
 productsRouter.get('/', (req, res) => {
         res.json(products)
     })
-productsRouter.post('/', (req, res) => {
+productsRouter.post('/', productValidation, (req, res) => {
         let newProduct = req.body;
         // Input Validation
-        if( !newProduct.coin || !newProduct.price || !newProduct.title){
-            // Bad Request
-            res.status(400).send("Required Fields: title, price, and coin");
-            return;
-        }
+
         newProduct.id = uuidv4();
         products.push(newProduct);
         // Created Product
@@ -31,14 +52,10 @@ productsRouter.get('/:id', (req, res) => {
         }
         res.status(404).send(`The product with id : [${req.params.id}] is not found.`);
     })
-productsRouter.put('/:id', (req, res) => {
+productsRouter.put('/:id', productValidation, (req, res) => {
         let id = req.params.id;
         let updatedProduct = req.body;
-        if(!updatedProduct.coin || !updatedProduct.price || !updatedProduct.title){
-            // Bad request
-            res.status(400).send("Fields required: title, price and coin");
-            return;
-        }
+
         let index = _.findIndex(products, product => product.id == id);
         if(index !== -1){
             // Update the product
