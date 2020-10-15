@@ -1,1 +1,3 @@
 info: 2020-10-15T17:56:40.700Z Server running on port 3002
+info: 2020-10-15T18:17:10.221Z Server running on port 3002
+info: 2020-10-15T18:17:23.218Z ::1 - GET /products HTTP/1.1 200 165 - 1.413 ms

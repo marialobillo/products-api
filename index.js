@@ -2,12 +2,18 @@ const express = require('express');
 const app = express();
 const productsRouter = require('./api/resources/products/products.routes');
 const winston = require('winston');
+const morgan = require('morgan');
 const logger = require('./utils/logger');
 
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(morgan('short', {
+    stream: {
+        write: message => logger.info(message.trim())
+    }
+}));
 
 app.use('/products', productsRouter);
 
