@@ -1,5 +1,5 @@
 const Joi = require('@hapi/joi');
-
+const logger = require('./../../../utils/logger');
 
 const productSchema = Joi.object({
     title: Joi.string().max(100).required(),
@@ -20,7 +20,7 @@ module.exports = (req, res, next) => {
         let validationErrors = validation.error.details.reduce((acumulator, error) => {
             return acumulator + `[${error.message}]`;
         }, '');
-        console.log(validationErrors);
+        logger.warn('We could not validate the product', req.body, validationErrors)
         res.status(400).send(validationErrors);
     }
 }
