@@ -1,3 +1,8 @@
 info: 2020-10-15T17:56:40.700Z Server running on port 3002
 info: 2020-10-15T18:17:10.221Z Server running on port 3002
 info: 2020-10-15T18:17:23.218Z ::1 - GET /products HTTP/1.1 200 165 - 1.413 ms
+info: 2020-10-19T16:44:06.782Z Server running on port 3002
+info: 2020-10-19T16:44:15.897Z ::1 - GET / HTTP/1.1 401 - - 3.117 ms
+info: 2020-10-19T16:44:20.957Z ::1 user GET / HTTP/1.1 401 - - 1.371 ms
+info: 2020-10-19T16:44:25.067Z ::1 user GET / HTTP/1.1 200 18 - 1.405 ms
+info: 2020-10-19T16:44:25.201Z ::1 user GET /favicon.ico HTTP/1.1 404 150 - 0.687 ms
