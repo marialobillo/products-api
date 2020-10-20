@@ -6,3 +6,8 @@ info: 2020-10-19T16:44:15.897Z ::1 - GET / HTTP/1.1 401 - - 3.117 ms
 info: 2020-10-19T16:44:20.957Z ::1 user GET / HTTP/1.1 401 - - 1.371 ms
 info: 2020-10-19T16:44:25.067Z ::1 user GET / HTTP/1.1 200 18 - 1.405 ms
 info: 2020-10-19T16:44:25.201Z ::1 user GET /favicon.ico HTTP/1.1 404 150 - 0.687 ms
+info: 2020-10-20T17:35:13.086Z Server running on port 3000
+info: 2020-10-20T17:35:19.753Z ::1 - GET /users HTTP/1.1 200 2 - 1.554 ms
+info: 2020-10-20T17:35:26.375Z ::1 - POST /users HTTP/1.1 201 25 - 50.907 ms
+info: 2020-10-20T17:35:29.194Z Email or username already exist on database.
+info: 2020-10-20T17:35:29.196Z ::1 - POST /users HTTP/1.1 409 36 - 1.505 ms

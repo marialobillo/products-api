@@ -1,5 +1,6 @@
 const express = require('express');
 const productsRouter = require('./api/resources/products/products.routes');
+const usersRouter = require('./api/resources/users/users.routes');
 const winston = require('winston');
 const morgan = require('morgan');
 const logger = require('./utils/logger');
@@ -15,7 +16,7 @@ passport.use(new BasicStrategy(
         } else {
             return done(null, false);
         }
-    }
+    } 
 ));
 
 
@@ -30,14 +31,16 @@ app.use(morgan('short', {
     }
 }));
 
+
 app.use(passport.initialize());
 
 app.use('/products', productsRouter);
+app.use('/users', usersRouter);
 
 app.get('/', passport.authenticate('basic', { session: false }), (req, res) => {
     res.send('API of shop online')
 })
 
-app.listen(3002, () => {
-    logger.info('Server running on port 3002');
+app.listen(3000, () => {
+    logger.info('Server running on port 3000');
 })
