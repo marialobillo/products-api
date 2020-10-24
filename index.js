@@ -4,20 +4,13 @@ const usersRouter = require('./api/resources/users/users.routes');
 const winston = require('winston');
 const morgan = require('morgan');
 const logger = require('./utils/logger');
+const auth = require('./api/libs/auth');
 
 const passport = require('passport');
 // Authentication using password and username
 const BasicStrategy = require('passport-http').BasicStrategy;
 
-passport.use(new BasicStrategy(
-    (username, password, done) => {
-        if(username.valueOf() === 'user' && password.valueOf() === 'password'){
-            return done(null, true);
-        } else {
-            return done(null, false);
-        }
-    } 
-));
+passport.use(new BasicStrategy( auth ));
 
 
 // Middleware
