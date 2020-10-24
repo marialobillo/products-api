@@ -7,7 +7,7 @@ const userSchema = Joi.object({
     email: Joi.string().email().required()
 });
 
-module.exports = (req, res, next) => {
+const userValidation = (req, res, next) => {
     const data = req.body;
     const validation = userSchema.validate(data, { 
         abortEarly: false, 
@@ -24,5 +24,33 @@ module.exports = (req, res, next) => {
         logger.warn('We could not validate the user', req.body, validation.error.details)
         res.status(400).send(validationErrors);
     }
+}
+
+
+const orderSchema = Joi.object({
+    username: Joi.string().required(),
+    password: Joi.string().required()
+})
+
+let orderLoginValidation = (req, res, next) => {
+    const data = req.body;
+    const validation = orderSchema.validate(data, {
+        abortEarly: false, 
+        convert: false
+    });
+
+    if(validation.error === undefined){
+        next()
+    } else {
+        // Bad request
+        let validationErrors = `User and password are required.`
+        res.status(400).send(validationErrors);
+    }
+}
+
+
+module.exports = {
+    userValidation,
+    orderLoginValidation
 }
 
