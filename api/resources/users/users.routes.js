@@ -2,6 +2,7 @@ const express = require('express');
 const _ = require('underscore');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const logger = require('../../../utils/logger');
 const validateUser = require('./users.validate');
@@ -44,5 +45,28 @@ usersRouter.post('/', validateUser, (req, res) => {
         res.status(201).send('User created successfully');
     });
 });
+
+usersRouter.post('/login', (req, res) => {
+    let noAuthUser = req.body
+    let index = _.findIndex(users, user => user.username === noAuthUser.username);
+
+    if(index === -1){
+        logger.warn(`User ${noAuthUser.username} does not exist.`)
+        res.status(400).send('Wrong credentials.User does not exist.')
+    }
+
+    let hashedPassword = users[index].password;
+    bcrypt.compare(noAuthUser.password, hashedPassword, (err, equals) => {
+        if(equals){
+            let token = jwt.sign({ id: users[index].id }, 'theredcatisblue',
+            { expiresIn: 86400 })
+            logger.info(`User ${noAuthUser.username} completed authentication`)
+            res.status(200).json({ token })
+        } else {
+            logger.info(`User ${noAuthUser.username} does not authenticated. Wrong passowrd`)
+            res.status(400).send('Wrong credentials. Please, check them out.')
+        }
+    })
+})
 
 module.exports = usersRouter;
