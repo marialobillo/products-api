@@ -39,7 +39,8 @@ usersRouter.post('/', validateUser, (req, res) => {
         users.push({
             username: newUser.username,
             email: newUser.email,
-            password: hashedPassword
+            password: hashedPassword,
+            id: uuidv4()
         });
 
         res.status(201).send('User created successfully');
