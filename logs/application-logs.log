@@ -64,3 +64,4 @@ info: 2020-10-25T16:39:22.817Z ::1 - POST /users/login HTTP/1.1 200 199 - 50.023
 info: 2020-10-25T16:39:59.000Z User maria got a valid token. Auth OK
 info: 2020-10-25T16:39:59.000Z [object Object]
 info: 2020-10-25T16:39:59.001Z ::1 - GET / HTTP/1.1 200 18 - 1.116 ms
+info: 2020-10-25T17:38:44.089Z Server running on port 3000

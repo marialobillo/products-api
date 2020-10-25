@@ -28,10 +28,6 @@ app.use(passport.initialize());
 app.use('/products', productsRouter);
 app.use('/users', usersRouter);
 
-app.get('/', passport.authenticate('jwt', { session: false }), (req, res) => {
-    logger.info(req.user)
-    res.send('API of shop online')
-})
 
 app.listen(3000, () => {
     logger.info('Server running on port 3000');

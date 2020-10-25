@@ -3,7 +3,9 @@ const { v4: uuidv4 } = require('uuid');
 const _ = require('underscore');
 const productValidation = require('./products.validate');
 const logger = require('./../../../utils/logger')
+const passport = require('passport');
 
+const jwtAuthenticate = passport.authenticate('jwt', { session: false });
 const products = require('./../../../database').products;
 const productsRouter = express.Router();
 
@@ -11,53 +13,70 @@ const productsRouter = express.Router();
 productsRouter.get('/', (req, res) => {
         res.json(products)
     })
-productsRouter.post('/', productValidation, (req, res) => {
-        let newProduct = req.body;
-        // Input Validation
+productsRouter.post('/', [jwtAuthenticate, productValidation], (req, res) => {
+    let newProduct = {
+        ...req.body,
+        id: uuidv4(),
+        owner: req.user.username
+    }
 
-        newProduct.id = uuidv4();
-        products.push(newProduct);
-        logger.info("Product was added to the collection", newProduct);
-        // Created Product
-        res.status(201).json(newProduct);
-    })
+    products.push(newProduct);
+    logger.info("Product was added to the collection", newProduct);
+    // Created Product
+    res.status(201).json(newProduct);
+})
 
 productsRouter.get('/:id', (req, res) => {
-        for(let product of products){
-            if(product.id == req.params.id){
-                res.json(product);
-                return;
-            }
-        }
-        res.status(404).send(`The product with id : [${req.params.id}] is not found.`);
-    })
-productsRouter.put('/:id', productValidation, (req, res) => {
-        let id = req.params.id;
-        let updatedProduct = req.body;
-
-        let index = _.findIndex(products, product => product.id == id);
-        if(index !== -1){
-            // Update the product
-            updatedProduct.id = id;
-            products[index] = updatedProduct;
-            logger.info(`Product id: [${id}] was updated.`, updatedProduct);
-            res.status(200).json(updatedProduct);
-        } else {
-            res.status(404).send(`The product with id : [${id}] was not found.`);
-        }
-    })
-productsRouter.delete('/:id', (req, res) => {
-        let id = req.params.id;
-        let indexForDelete = _.findIndex(products, product => product.id == id);
-        if(indexForDelete === -1){
-            logger.warn(`Product id: [${id}] does not exists.`);
-            res.status(404).send(`Product with id: [${id}] does not exist.`);
+    for(let product of products){
+        if(product.id == req.params.id){
+            res.json(product);
             return;
         }
+    }
+    res.status(404).send(`The product with id : [${req.params.id}] is not found.`);
+})
 
-        let deleted = products.splice(indexForDelete, 1);
-        res.json(deleted);
-    });
+productsRouter.put('/:id', [jwtAuthenticate, productValidation], (req, res) => {
+    let updatedProduct = {
+        ...req.body.username,
+        id: req.params.id,
+        owner: req.user.username 
+    }
+    
+    let index = _.findIndex(products, product => product.id == updatedProduct.id);
+    if(index !== -1){
+        if(products[index].owner !== updatedProduct.owner){
+            logger.info(`User ${req.user.username} is not the owner of id ${updatedProduct.id}`);
+            res.status(401).send(`You are not the owner of ${updatedProduct.id}. You can update only your products.`)
+            return
+        }
+        // Update the product
+        products[index] = updatedProduct;
+        logger.info(`Product id: [${updatedProduct.id}] was updated.`, updatedProduct);
+        res.status(200).json(updatedProduct);
+    } else {
+        res.status(404).send(`The product with id : [${updatedProduct.id}] was not found.`);
+    }
+})
+
+productsRouter.delete('/:id', jwtAuthenticate, (req, res) => {
+    let id = req.params.id;
+    let indexForDelete = _.findIndex(products, product => product.id == id);
+    if(indexForDelete === -1){
+        logger.warn(`Product id: [${id}] does not exists.`);
+        res.status(404).send(`Product with id: [${id}] does not exist.`);
+        return;
+    }
+
+    if(products[indexForDelete].owner !== req.user.username){
+        logger.info(`User ${req.user.username} is not the owner of id ${products[indexForDelete].id}`);
+        res.status(401).send(`You are not the owner of ${products[indexForDelete].id}. You can delete only your products.`)
+        return
+    }
+
+    let deleted = products.splice(indexForDelete, 1);
+    res.json(deleted);
+});
 
 
 module.exports = productsRouter;
