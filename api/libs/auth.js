@@ -2,25 +2,25 @@ const _ = require('underscore');
 const logger = require('./../../utils/logger');
 const users = require('./../../database').users;
 const bcrypt = require('bcrypt');
+const passportJWT = require('passport-jwt');
 
-module.exports = (username, password, done) => {
-    let index = _.findIndex(users, user => user.username == username)
+let jwtOptions = {
+    secretOrKey: 'theredcatisblue',
+    jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeaderAsBearerToken()
+}
+
+module.exports = new passportJWT.Strategy(jwtOptions, (jwtPayload, next) => {
+    let index = _.findIndex(users, user => user.id === jwtPayload.id)
 
     if(index === -1){
-        logger.warn(`User ${username} could not authenticated.`)
-        done(null, false)
-        return
-    } 
+        logger.info(`JWT token is not valid. User with id ${jwtPayload.id} does not exist.`);
+        next(null, false);
+    } else {
+        logger.info(`User ${users[index].username} got a valid token. Auth OK`);
+        next(null, {
+            username: users[index].username,
+            id: users[index].id
+        });
+    }
 
-    let hashedPassword = users[index].password
-    bcrypt.compare(password, hashedPassword, (err, equals) => {
-        if(equals){
-            logger.info(`User ${username} completed authentication`)
-            done(null, true)
-        } else {
-            logger.warn(`User ${username} did not complete authentication. Wrong pass.`)
-            done(null, false)
-        }
-    })
-
-} 
+})
