@@ -55,11 +55,13 @@ usersRouter.post('/login', orderLoginValidation, (req, res) => {
     if(index === -1){
         logger.warn(`User ${noAuthUser.username} does not exist.`)
         res.status(400).send('Wrong credentials.User does not exist.')
+        return;
     }
 
     let hashedPassword = users[index].password;
     bcrypt.compare(noAuthUser.password, hashedPassword, (err, equals) => {
         if(equals){
+            // Generate and send token
             let token = jwt.sign({ id: users[index].id }, 'theredcatisblue',
             { expiresIn: 86400 })
             logger.info(`User ${noAuthUser.username} completed authentication`)

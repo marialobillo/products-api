@@ -4,13 +4,11 @@ const usersRouter = require('./api/resources/users/users.routes');
 const winston = require('winston');
 const morgan = require('morgan');
 const logger = require('./utils/logger');
-const auth = require('./api/libs/auth');
+const authJWT = require('./api/libs/auth');
 
 const passport = require('passport');
 // Authentication using password and username
-const BasicStrategy = require('passport-http').BasicStrategy;
-
-passport.use(new BasicStrategy( auth ));
+passport.use(authJWT);
 
 
 // Middleware
@@ -30,7 +28,8 @@ app.use(passport.initialize());
 app.use('/products', productsRouter);
 app.use('/users', usersRouter);
 
-app.get('/', passport.authenticate('basic', { session: false }), (req, res) => {
+app.get('/', passport.authenticate('jwt', { session: false }), (req, res) => {
+    logger.info(req.user)
     res.send('API of shop online')
 })
 
