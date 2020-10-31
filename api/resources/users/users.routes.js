@@ -3,6 +3,7 @@ const _ = require('underscore');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const config = require('./../../../config');
 
 const logger = require('../../../utils/logger');
 const validateUser = require('./users.validate').userValidation;
@@ -62,8 +63,9 @@ usersRouter.post('/login', orderLoginValidation, (req, res) => {
     bcrypt.compare(noAuthUser.password, hashedPassword, (err, equals) => {
         if(equals){
             // Generate and send token
-            let token = jwt.sign({ id: users[index].id }, 'theredcatisblue',
-            { expiresIn: 86400 })
+            let token = jwt.sign({ id: users[index].id }, 
+                config.jwt.secret,
+                { expiresIn: config.jwt.expirationTime })
             logger.info(`User ${noAuthUser.username} completed authentication`)
             res.status(200).json({ token })
         } else {

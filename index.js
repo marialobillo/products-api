@@ -5,6 +5,7 @@ const winston = require('winston');
 const morgan = require('morgan');
 const logger = require('./utils/logger');
 const authJWT = require('./api/libs/auth');
+const config = require('./config');
 
 const passport = require('passport');
 // Authentication using password and username
@@ -29,6 +30,6 @@ app.use('/products', productsRouter);
 app.use('/users', usersRouter);
 
 
-app.listen(3000, () => {
+app.listen(config.port, () => {
     logger.info('Server running on port 3000');
 })
