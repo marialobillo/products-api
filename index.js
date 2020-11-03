@@ -1,16 +1,27 @@
 const express = require('express');
-const productsRouter = require('./api/resources/products/products.routes');
-const usersRouter = require('./api/resources/users/users.routes');
 const winston = require('winston');
 const morgan = require('morgan');
+const mongoose = require('mongoose');
+const passport = require('passport');
+
 const logger = require('./utils/logger');
 const authJWT = require('./api/libs/auth');
 const config = require('./config');
+const productsRouter = require('./api/resources/products/products.routes');
+const usersRouter = require('./api/resources/users/users.routes');
 
-const passport = require('passport');
 // Authentication using password and username
 passport.use(authJWT);
 
+// Database connection
+mongoose.connect(config.mongoURI, {
+    useUnifiedTopology: true, 
+    useNewUrlParser: true 
+})
+mongoose.connection.on('error', () => {
+    logger.error('Connection Failed MongoDB');
+    process.exit(1);
+})
 
 // Middleware
 const app = express();
