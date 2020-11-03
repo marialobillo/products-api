@@ -20,8 +20,8 @@ productsRouter.post('/', [jwtAuthenticate, productValidation], (req, res) => {
         owner: req.user.username
     }).save()
         .then(product => {
-            logger.info("Product was added to the collection", newProduct);
-            res.status(201).json(newProduct);        
+            logger.info("Product was added to the collection", product);
+            res.status(201).json(product);        
         })
         .catch(err => {
             logger.warn('Product could not be created', err);
