@@ -7,6 +7,11 @@ function createProduct(product, owner){
     }).save()
 }
 
+function getProducts(){
+    return Product.find({})
+}
+
 module.exports = {
-    createProduct
+    createProduct,
+    getProducts
 }
