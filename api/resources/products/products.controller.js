@@ -11,7 +11,12 @@ function getProducts(){
     return Product.find({})
 }
 
+function getProductById(id){
+    return Product.findById(id)
+}
+
 module.exports = {
     createProduct,
-    getProducts
+    getProducts,
+    getProductById
 }

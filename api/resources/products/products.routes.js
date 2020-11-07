@@ -36,13 +36,21 @@ productsRouter.post('/', [jwtAuthenticate, productValidation], (req, res) => {
 })
 
 productsRouter.get('/:id', (req, res) => {
-    for(let product of products){
-        if(product.id == req.params.id){
-            res.json(product);
-            return;
-        }
-    }
-    res.status(404).send(`The product with id : [${req.params.id}] is not found.`);
+    let id = req.params.id 
+    
+    productController.getProductById(id)
+        .then(product => {
+            if(!product){
+                res.status(404).send(`Product with id : [${id}] was not found.`);
+            } else {
+                res.json(product)
+            }
+        })
+        .catch(err => {
+            logger.error(`Exception ocurred: Product id: ${id}`, err)
+            res.status(500).send(`Error with Product id: ${id}`)
+        })
+    
 })
 
 productsRouter.put('/:id', [jwtAuthenticate, productValidation], (req, res) => {
