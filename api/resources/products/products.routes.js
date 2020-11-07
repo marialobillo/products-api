@@ -10,6 +10,15 @@ const products = require('./../../../database').products;
 const productsRouter = express.Router();
 const Product = require('./products.model');
 
+function validateId(req, res, next){
+    let id = req.params.id 
+    // regex
+    if(id.match(/^[a-fA-F0-9]{24}$/) === null){
+        res.status(400).send(`Id ${id} is not a valid Id`)
+        return
+    } 
+    next()
+}
 
 productsRouter.get('/', (req, res) => {
     productController.getProducts()
@@ -35,7 +44,7 @@ productsRouter.post('/', [jwtAuthenticate, productValidation], (req, res) => {
 
 })
 
-productsRouter.get('/:id', (req, res) => {
+productsRouter.get('/:id', validateId, (req, res) => {
     let id = req.params.id 
     
     productController.getProductById(id)
