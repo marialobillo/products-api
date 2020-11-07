@@ -12,21 +12,27 @@ const Product = require('./products.model');
 
 
 productsRouter.get('/', (req, res) => {
-        res.json(products)
-    })
+    productController.getProducts()
+        .then(products => {
+            res.json(products)
+        })
+        .catch(err => {
+            res.status(500).send("There was an error Create Product from Database")
+        })
+})
+
 productsRouter.post('/', [jwtAuthenticate, productValidation], (req, res) => {
-    new Product({
-        ...req,body,
-        owner: req.user.username
-    }).save()
+
+    productController.createProduct(req.body, req.user.username)
         .then(product => {
             logger.info("Product was added to the collection", product);
             res.status(201).json(product);        
         })
         .catch(err => {
-            logger.warn('Product could not be created', err);
+            logger.error('Product could not be created', err);
             res.status(500).send('Error ocurred during create product');
         })
+
 })
 
 productsRouter.get('/:id', (req, res) => {
