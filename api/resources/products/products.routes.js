@@ -85,23 +85,38 @@ productsRouter.put('/:id', [jwtAuthenticate, productValidation], (req, res) => {
     }
 })
 
-productsRouter.delete('/:id', jwtAuthenticate, (req, res) => {
+productsRouter.delete('/:id', [jwtAuthenticate, validateId], async (req, res) => {
     let id = req.params.id;
-    let indexForDelete = _.findIndex(products, product => product.id == id);
-    if(indexForDelete === -1){
-        logger.warn(`Product id: [${id}] does not exists.`);
+    let product
+
+    try {
+        product = await productController.getProductById(id)
+    } catch (error) {
+        logger.error(`Error on delete the product with id: ${id}`)
+        res.status(404).send(`Product with id: ${id} does not exist.`)
+    }
+
+    if(product === -1){
+        logger.info(`Product id: [${id}] does not exists.`);
         res.status(404).send(`Product with id: [${id}] does not exist.`);
         return;
     }
 
-    if(products[indexForDelete].owner !== req.user.username){
-        logger.info(`User ${req.user.username} is not the owner of id ${products[indexForDelete].id}`);
-        res.status(401).send(`You are not the owner of ${products[indexForDelete].id}. You can delete only your products.`)
+    let userAuthenticated = req.user.username
+    if(product.owner !== userAuthenticated){
+        logger.info(`User ${userAuthenticated} is not the owner of id ${id}`);
+        res.status(401).send(`You are not the owner of ${id}. You can delete only your products.`)
         return
     }
 
-    let deleted = products.splice(indexForDelete, 1);
-    res.json(deleted);
+    try {
+        let deletedProduct = await productController.deleteProduct(id)
+        logger.info(`Product with ID: ${id} was deleted`)
+        res.json(deletedProduct)
+    } catch (error) {
+        res.status(500).send(`Error on deleting product with id: ${id}`)
+    }
+
 });
 
 
