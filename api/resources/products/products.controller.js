@@ -15,8 +15,13 @@ function getProductById(id){
     return Product.findById(id)
 }
 
+function deleteProductById(id){
+    return Product.findByIdAndRemove(id)
+}
+
 module.exports = {
     createProduct,
     getProducts,
-    getProductById
+    getProductById,
+    deleteProductById
 }
