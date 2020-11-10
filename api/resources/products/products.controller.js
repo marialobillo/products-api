@@ -19,9 +19,21 @@ function deleteProductById(id){
     return Product.findByIdAndRemove(id)
 }
 
+function updateProduct(id, product, username){
+    return Product.findOneAndUpdate(
+        { id: id },
+        {
+            ...product,
+            owner: username
+        }, {
+            new: true
+        })
+}
+
 module.exports = {
     createProduct,
     getProducts,
     getProductById,
-    deleteProductById
+    deleteProductById,
+    updateProduct
 }
