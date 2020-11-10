@@ -62,27 +62,38 @@ productsRouter.get('/:id', validateId, (req, res) => {
     
 })
 
-productsRouter.put('/:id', [jwtAuthenticate, productValidation], (req, res) => {
-    let updatedProduct = {
-        ...req.body.username,
-        id: req.params.id,
-        owner: req.user.username 
+productsRouter.put('/:id', [jwtAuthenticate, productValidation], async (req, res) => {
+    let id = req.params.id
+    let userAuthenticated = req.user.username 
+    let productUpdated 
+
+    try {
+        productUpdated = await productController.getProductById(id)
+    } catch (error) {
+        logger.warn(`Exception about the product info with ID: ${id}`)
+        res.status(500).send(`Error on updating the product with ID: ${id}`)
     }
-    
-    let index = _.findIndex(products, product => product.id == updatedProduct.id);
-    if(index !== -1){
-        if(products[index].owner !== updatedProduct.owner){
-            logger.info(`User ${req.user.username} is not the owner of id ${updatedProduct.id}`);
-            res.status(401).send(`You are not the owner of ${updatedProduct.id}. You can update only your products.`)
-            return
-        }
-        // Update the product
-        products[index] = updatedProduct;
-        logger.info(`Product id: [${updatedProduct.id}] was updated.`, updatedProduct);
-        res.status(200).json(updatedProduct);
-    } else {
-        res.status(404).send(`The product with id : [${updatedProduct.id}] was not found.`);
+
+    if(!productUpdated){
+        res.status(404).send(`The product with ID : ${id} does not exist.`)
+        return
     }
+
+    if(!productUpdated.owner !== userAuthenticated){
+        logger.warn(`User ${userAuthenticated} is not the owner of ${id} Product`)
+        res.status(401).send(`You are not the owner of ${id} product.`)
+        return
+    }
+
+    productController.updateProduct(id, req.body, userAuthenticated)
+        .then(product => {
+            res.json(product)
+            logger.info(`Product ${id} was updated`, product)
+        })
+        .catch(error => {
+            logger.warn(`Exception with ${id} product on Update it`)
+        })
+
 })
 
 productsRouter.delete('/:id', [jwtAuthenticate, validateId], async (req, res) => {
