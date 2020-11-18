@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('./../../../config');
 
+const userController = require('./users.controller');
 const logger = require('../../../utils/logger');
 const validateUser = require('./users.validate').userValidation;
 const orderLoginValidation = require('./users.validate').orderLoginValidation;
@@ -13,7 +14,14 @@ const users = require('../../../database').users;
 const usersRouter = express.Router();
 
 usersRouter.get('/', (req, res) => {
-    res.json(users);
+    userController.getUsers()
+        .then(users => {
+            res.json(users)
+        })
+        .catch(error => {
+            log.error('Error on getting all Users', error)
+            res.sendStatus(500)
+        })
 });
 
 usersRouter.post('/', validateUser, (req, res) => {
