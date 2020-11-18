@@ -34,7 +34,7 @@ productsRouter.post('/', [jwtAuthenticate, productValidation], (req, res) => {
 
     productController.createProduct(req.body, req.user.username)
         .then(product => {
-            logger.info("Product was added to the collection", product);
+            logger.info("Product was added to the collection", product.toObject());
             res.status(201).json(product);        
         })
         .catch(err => {
@@ -88,7 +88,7 @@ productsRouter.put('/:id', [jwtAuthenticate, productValidation], async (req, res
     productController.updateProduct(id, req.body, userAuthenticated)
         .then(product => {
             res.json(product)
-            logger.info(`Product ${id} was updated`, product)
+            logger.info(`Product ${id} was updated`, product.toObject())
         })
         .catch(error => {
             logger.warn(`Exception with ${id} product on Update it`)
