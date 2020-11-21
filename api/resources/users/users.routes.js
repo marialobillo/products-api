@@ -30,7 +30,7 @@ usersRouter.get('/', (req, res) => {
         })
 });
 
-usersRouter.post('/', validateUser, (req, res) => {
+usersRouter.post('/', [validateUser, transformBodyLowercase], (req, res) => {
     let newUser = req.body;
 
     userController.userExists(newUser.username, newUser.email)
@@ -66,7 +66,7 @@ usersRouter.post('/', validateUser, (req, res) => {
   
 });
 
-usersRouter.post('/login', orderLoginValidation, (req, res) => {
+usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], (req, res) => {
     let noAuthUser = req.body
     let index = _.findIndex(users, user => user.username === noAuthUser.username);
 
