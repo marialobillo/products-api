@@ -13,6 +13,12 @@ const orderLoginValidation = require('./users.validate').orderLoginValidation;
 const users = require('../../../database').users;
 const usersRouter = express.Router();
 
+function transformBodyLowercase(req, res, next) {
+    req.body.username && (req.body.username = req.body.username.toLowerCase())
+    req.body.email && (req.body.email = req.body.email.toLowerCase())
+    next()
+}
+
 usersRouter.get('/', (req, res) => {
     userController.getUsers()
         .then(users => {
@@ -27,7 +33,7 @@ usersRouter.get('/', (req, res) => {
 usersRouter.post('/', validateUser, (req, res) => {
     let newUser = req.body;
 
-    userController,userExists(newUser.username, newUser.email)
+    userController.userExists(newUser.username, newUser.email)
     .then(userExists => {
         if(userExists){
             logger.warn(`Email ${newUser.email} or username ${newUser.username} already exists.`)
