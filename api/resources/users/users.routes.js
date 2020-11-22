@@ -68,6 +68,20 @@ usersRouter.post('/', [validateUser, transformBodyLowercase], (req, res) => {
 
 usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], (req, res) => {
     let noAuthUser = req.body
+    let userRegistered 
+
+    try {
+        userRegistered = await usersController.getUser({
+            username: noAuthUser.username
+        })
+    } catch (error) {
+        looger.error(`Error on checking out the user ${noAuthUser.username} was registered.`)
+        res.status(500).send('Error on login process')
+    }
+
+
+
+
     let index = _.findIndex(users, user => user.username === noAuthUser.username);
 
     if(index === -1){
