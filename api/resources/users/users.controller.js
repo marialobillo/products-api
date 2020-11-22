@@ -23,8 +23,15 @@ function userExists(username, email){
     })
 }
 
+function getUser({username: username, id: id}){
+    if(username)return User.findOne({ username: username })
+    if(id) return User.findById(id)
+    throw new Error('For getting an User we need username or id')
+}
+
 module.exports = {
     getUsers,
     createUser, 
-    userExists
+    userExists,
+    getUser
 }
