@@ -77,33 +77,41 @@ usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], (req,
     } catch (error) {
         looger.error(`Error on checking out the user ${noAuthUser.username} was registered.`)
         res.status(500).send('Error on login process')
+        return
+    }
+
+    if(!userRegistered){
+        logger.info(`User ${noAuthUser.username} does not exist.`)
+        res.status(400).send('User and password are not correct')
+        return
+    }
+
+    let correctPassword 
+    try {
+        correctPassword = await bcrypt.compare(noAuthUser.password, userRegistered.password)
+    } catch (error) {
+        logger.error('Error on validation password', error)
+        res.status(500).send('Error on login process')
+        return
+    }
+
+    if(correctPassword){
+        // Generate and send token
+        let token = jwt.sign(
+            { id: userRegistered.id }, 
+            config.jwt.secret, 
+            { expiresIn: config.jwt.expirationTime })
+        logger.info(`User ${noAuthUser.username} completed authentication.`)
+        res.status(200).json({ token })
+    } else {
+        logger.info(`User ${noAuthUser.username} does not authenticated auth. Password not correct.`);
+        res.status(400).send('Wrong credentials. Please, check them out.')
     }
 
 
 
 
-    let index = _.findIndex(users, user => user.username === noAuthUser.username);
-
-    if(index === -1){
-        logger.warn(`User ${noAuthUser.username} does not exist.`)
-        res.status(400).send('Wrong credentials.User does not exist.')
-        return;
-    }
-
-    let hashedPassword = users[index].password;
-    bcrypt.compare(noAuthUser.password, hashedPassword, (err, equals) => {
-        if(equals){
-            // Generate and send token
-            let token = jwt.sign({ id: users[index].id }, 
-                config.jwt.secret,
-                { expiresIn: config.jwt.expirationTime })
-            logger.info(`User ${noAuthUser.username} completed authentication`)
-            res.status(200).json({ token })
-        } else {
-            logger.info(`User ${noAuthUser.username} does not authenticated. Wrong passowrd`)
-            res.status(400).send('Wrong credentials. Please, check them out.')
-        }
-    })
+    
 })
 
 module.exports = usersRouter;
