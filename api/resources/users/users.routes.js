@@ -10,7 +10,6 @@ const logger = require('../../../utils/logger');
 const validateUser = require('./users.validate').userValidation;
 const orderLoginValidation = require('./users.validate').orderLoginValidation;
 
-const users = require('../../../database').users;
 const usersRouter = express.Router();
 
 function transformBodyLowercase(req, res, next) {

@@ -6,7 +6,6 @@ const logger = require('./../../../utils/logger')
 const passport = require('passport');
 
 const jwtAuthenticate = passport.authenticate('jwt', { session: false });
-const products = require('./../../../database').products;
 const productsRouter = express.Router();
 const Product = require('./products.model');
 
