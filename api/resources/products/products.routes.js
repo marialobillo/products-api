@@ -8,6 +8,7 @@ const passport = require('passport');
 const jwtAuthenticate = passport.authenticate('jwt', { session: false });
 const productsRouter = express.Router();
 const Product = require('./products.model');
+const processErrors = require('../../libs/errorHandler').processErrors;
 
 function validateId(req, res, next){
     let id = req.params.id 
@@ -29,19 +30,15 @@ productsRouter.get('/', (req, res) => {
         })
 })
 
-productsRouter.post('/', [jwtAuthenticate, productValidation], (req, res) => {
+productsRouter.post('/', [jwtAuthenticate, productValidation], processErros((req, res) => {
 
-    productController.createProduct(req.body, req.user.username)
+    return productController.createProduct(req.body, req.user.username)
         .then(product => {
             logger.info("Product was added to the collection", product.toObject());
             res.status(201).json(product);        
         })
-        .catch(err => {
-            logger.error('Product could not be created', err);
-            res.status(500).send('Error ocurred during create product');
-        })
 
-})
+}))
 
 productsRouter.get('/:id', validateId, (req, res) => {
     let id = req.params.id 
