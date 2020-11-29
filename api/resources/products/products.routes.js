@@ -7,7 +7,7 @@ const passport = require('passport');
 
 const jwtAuthenticate = passport.authenticate('jwt', { session: false });
 const productsRouter = express.Router();
-const Product = require('./products.model');
+const productController = require('./products.controller');
 const processErrors = require('../../libs/errorHandler').processErrors;
 
 function validateId(req, res, next){
@@ -20,17 +20,14 @@ function validateId(req, res, next){
     next()
 }
 
-productsRouter.get('/', (req, res) => {
-    productController.getProducts()
+productsRouter.get('/', processErrors((req, res) => {
+    return productController.getProducts()
         .then(products => {
             res.json(products)
         })
-        .catch(err => {
-            res.status(500).send("There was an error Create Product from Database")
-        })
-})
+}))
 
-productsRouter.post('/', [jwtAuthenticate, productValidation], processErros((req, res) => {
+productsRouter.post('/', [jwtAuthenticate, productValidation], processErrors((req, res) => {
 
     return productController.createProduct(req.body, req.user.username)
         .then(product => {
@@ -40,10 +37,10 @@ productsRouter.post('/', [jwtAuthenticate, productValidation], processErros((req
 
 }))
 
-productsRouter.get('/:id', validateId, (req, res) => {
-    let id = req.params.id 
-    
-    productController.getProductById(id)
+productsRouter.get('/:id', validateId, processErrors((req, res) => {
+    let id = req.params.id
+
+    return productController.getProductById(id)
         .then(product => {
             if(!product){
                 res.status(404).send(`Product with id : [${id}] was not found.`);
@@ -51,24 +48,15 @@ productsRouter.get('/:id', validateId, (req, res) => {
                 res.json(product)
             }
         })
-        .catch(err => {
-            logger.error(`Exception ocurred: Product id: ${id}`, err)
-            res.status(500).send(`Error with Product id: ${id}`)
-        })
-    
-})
 
-productsRouter.put('/:id', [jwtAuthenticate, productValidation], async (req, res) => {
+}))
+
+productsRouter.put('/:id', [jwtAuthenticate, productValidation], processErrors(async (req, res) => {
     let id = req.params.id
     let userAuthenticated = req.user.username 
     let productUpdated 
 
-    try {
-        productUpdated = await productController.getProductById(id)
-    } catch (error) {
-        logger.warn(`Exception about the product info with ID: ${id}`)
-        res.status(500).send(`Error on updating the product with ID: ${id}`)
-    }
+    productUpdated = await productController.getProductById(id)
 
     if(!productUpdated){
         res.status(404).send(`The product with ID : ${id} does not exist.`)
@@ -86,22 +74,14 @@ productsRouter.put('/:id', [jwtAuthenticate, productValidation], async (req, res
             res.json(product)
             logger.info(`Product ${id} was updated`, product.toObject())
         })
-        .catch(error => {
-            logger.warn(`Exception with ${id} product on Update it`)
-        })
 
-})
+}))
 
-productsRouter.delete('/:id', [jwtAuthenticate, validateId], async (req, res) => {
+productsRouter.delete('/:id', [jwtAuthenticate, validateId], processErrors(async (req, res) => {
     let id = req.params.id;
     let product
 
-    try {
-        product = await productController.getProductById(id)
-    } catch (error) {
-        logger.error(`Error on delete the product with id: ${id}`)
-        res.status(404).send(`Product with id: ${id} does not exist.`)
-    }
+    product = await productController.getProductById(id)
 
     if(product === -1){
         logger.info(`Product id: [${id}] does not exists.`);
@@ -116,15 +96,11 @@ productsRouter.delete('/:id', [jwtAuthenticate, validateId], async (req, res) =>
         return
     }
 
-    try {
-        let deletedProduct = await productController.deleteProduct(id)
-        logger.info(`Product with ID: ${id} was deleted`)
-        res.json(deletedProduct)
-    } catch (error) {
-        res.status(500).send(`Error on deleting product with id: ${id}`)
-    }
+    let deletedProduct = await productController.deleteProduct(id)
+    logger.info(`Product with ID: ${id} was deleted`)
+    res.json(deletedProduct)
 
-});
+}))
 
 
 module.exports = productsRouter;
