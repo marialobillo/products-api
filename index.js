@@ -1,7 +1,7 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const winston = require('winston');
 const morgan = require('morgan');
-const mongoose = require('mongoose');
 const passport = require('passport');
 
 const logger = require('./utils/logger');
@@ -9,6 +9,8 @@ const authJWT = require('./api/libs/auth');
 const config = require('./config');
 const productsRouter = require('./api/resources/products/products.routes');
 const usersRouter = require('./api/resources/users/users.routes');
+const errorHandler = require('./api/libs/errorHandler');
+
 
 // Authentication using password and username
 passport.use(authJWT);
@@ -16,7 +18,7 @@ passport.use(authJWT);
 // Database connection
 mongoose.connect(config.mongoURI, {
     useUnifiedTopology: true, 
-    useNewUrlParser: true 
+    useNewUrlParser: true
 })
 mongoose.connection.on('error', () => {
     logger.error('Connection Failed MongoDB');
@@ -39,6 +41,13 @@ app.use(passport.initialize());
 
 app.use('/products', productsRouter);
 app.use('/users', usersRouter);
+
+app.use(errorHandler.processErrorsFromDB);
+if(config.environment === 'prod'){
+    app.use(errorHandler.errorsOnProduction)
+} else {
+    app.use(errorHandler.errorsOnDevelopment)
+}
 
 
 app.listen(config.port, () => {
