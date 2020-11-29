@@ -7,10 +7,22 @@ const config = require('./../../../config');
 
 const userController = require('./users.controller');
 const logger = require('../../../utils/logger');
+const { response } = require('express');
+const usersController = require('./users.controller');
 const validateUser = require('./users.validate').userValidation;
 const orderLoginValidation = require('./users.validate').orderLoginValidation;
+const processErrors = require('../../libs/errorHandler').processErrors;
 
 const usersRouter = express.Router();
+
+class UserDataInUse extends Error {
+    constructor(message){
+        super(message)
+        this.message = message || 'Email or username already in use.'
+        this.status = 409
+        this.name = 'UserDataInUse'
+    }
+}
 
 function transformBodyLowercase(req, res, next) {
     req.body.username && (req.body.username = req.body.username.toLowerCase())
@@ -18,66 +30,42 @@ function transformBodyLowercase(req, res, next) {
     next()
 }
 
-usersRouter.get('/', (req, res) => {
-    userController.getUsers()
+usersRouter.get('/', processErrors((req, res) => {
+    return userController.getUsers()
         .then(users => {
             res.json(users)
         })
-        .catch(error => {
-            log.error('Error on getting all Users', error)
-            res.sendStatus(500)
-        })
-});
+}))
 
-usersRouter.post('/', [validateUser, transformBodyLowercase], (req, res) => {
+usersRouter.post('/', [validateUser, transformBodyLowercase], processErrors((req, res) => {
     let newUser = req.body;
 
-    userController.userExists(newUser.username, newUser.email)
-    .then(userExists => {
-        if(userExists){
-            logger.warn(`Email ${newUser.email} or username ${newUser.username} already exists.`)
-            res.status(409).send('The email or username already associate to an account')
-            return
-        }
-
-        bcrypt.hash(newUser.password, 10, (error, hashedPassword) => {
-            if(error){
-                logger.error('Error trying to get password hash', err)
-                res.status(500).send('Error on creating the User')
-                return
+    return userController.userExists(newUser.username, newUser.email)
+        .then(userExists => {
+            if(userExists){
+                logger.warn(`Email ${newUser.email} or username ${newUser.username} already exists.`)
+               throw new UserDataInUse()
             }
 
-            userController.createUser(newUser, hashedPassword)
-                .then(newUser => {
-                    res.status(201).send('User create successfully')
-                })
-                .catch(error => {
-                    logger.error('Error trying to create a new User', error)
-                    res.status(500).send('Error trying to create a new User')
-                })
+            return bcrypt.hash(newUser.password, 10) 
         })
-    })
-    .catch(error => {
-        logger.error(`Error on User verification ${newUser.username}`)
-        res.status(500).send('Error when we try to create a new User')
-    })
+        .then((hash) => {
+            return userController.createUser(newUser, hash)
+            .then(newUser => {
+                res.status(201).send('User create successfully')
+            })
+        })
 
-  
-});
+}))
 
-usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], (req, res) => {
+usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], processErrors(async (req, res) => {
     let noAuthUser = req.body
     let userRegistered 
 
-    try {
-        userRegistered = await usersController.getUser({
-            username: noAuthUser.username
-        })
-    } catch (error) {
-        looger.error(`Error on checking out the user ${noAuthUser.username} was registered.`)
-        res.status(500).send('Error on login process')
-        return
-    }
+    userRegistered = await usersController.getUser({
+        username: noAuthUser.username
+    })
+    
 
     if(!userRegistered){
         logger.info(`User ${noAuthUser.username} does not exist.`)
@@ -86,13 +74,7 @@ usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], (req,
     }
 
     let correctPassword 
-    try {
-        correctPassword = await bcrypt.compare(noAuthUser.password, userRegistered.password)
-    } catch (error) {
-        logger.error('Error on validation password', error)
-        res.status(500).send('Error on login process')
-        return
-    }
+    correctPassword = await bcrypt.compare(noAuthUser.password, userRegistered.password)
 
     if(correctPassword){
         // Generate and send token
@@ -108,9 +90,6 @@ usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], (req,
     }
 
 
-
-
-    
-})
+}))
 
 module.exports = usersRouter;
