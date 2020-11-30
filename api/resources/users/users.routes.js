@@ -12,17 +12,9 @@ const usersController = require('./users.controller');
 const validateUser = require('./users.validate').userValidation;
 const orderLoginValidation = require('./users.validate').orderLoginValidation;
 const processErrors = require('../../libs/errorHandler').processErrors;
+const { UserDataInUse, IncorrectCredentials } = require('./users.error');
 
 const usersRouter = express.Router();
-
-class UserDataInUse extends Error {
-    constructor(message){
-        super(message)
-        this.message = message || 'Email or username already in use.'
-        this.status = 409
-        this.name = 'UserDataInUse'
-    }
-}
 
 function transformBodyLowercase(req, res, next) {
     req.body.username && (req.body.username = req.body.username.toLowerCase())
@@ -69,8 +61,7 @@ usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], proce
 
     if(!userRegistered){
         logger.info(`User ${noAuthUser.username} does not exist.`)
-        res.status(400).send('User and password are not correct')
-        return
+        throw new IncorrectCredentials();
     }
 
     let correctPassword 
@@ -86,7 +77,7 @@ usersRouter.post('/login', [orderLoginValidation, transformBodyLowercase], proce
         res.status(200).json({ token })
     } else {
         logger.info(`User ${noAuthUser.username} does not authenticated auth. Password not correct.`);
-        res.status(400).send('Wrong credentials. Please, check them out.')
+        throw new IncorrectCredentials();
     }
 
 
