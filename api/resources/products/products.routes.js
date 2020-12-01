@@ -9,6 +9,8 @@ const jwtAuthenticate = passport.authenticate('jwt', { session: false });
 const productsRouter = express.Router();
 const productController = require('./products.controller');
 const processErrors = require('../../libs/errorHandler').processErrors;
+const { ProductNoExists, UserNoOwner} = require('./products.error');
+const usersController = require('../users/users.controller');
 
 function validateId(req, res, next){
     let id = req.params.id 
@@ -42,11 +44,9 @@ productsRouter.get('/:id', validateId, processErrors((req, res) => {
 
     return productController.getProductById(id)
         .then(product => {
-            if(!product){
-                res.status(404).send(`Product with id : [${id}] was not found.`);
-            } else {
-                res.json(product)
-            }
+            if(!product) throw new ProductNoExists(`Product with id : [${id}] was not found.`)
+
+            res.json(product)
         })
 
 }))
@@ -58,15 +58,11 @@ productsRouter.put('/:id', [jwtAuthenticate, productValidation], processErrors(a
 
     productUpdated = await productController.getProductById(id)
 
-    if(!productUpdated){
-        res.status(404).send(`The product with ID : ${id} does not exist.`)
-        return
-    }
+    if(!productUpdated) throw new ProductNoExists(`Product with id : [${id}] was not found.`)
 
     if(!productUpdated.owner !== userAuthenticated){
         logger.warn(`User ${userAuthenticated} is not the owner of ${id} Product`)
-        res.status(401).send(`You are not the owner of ${id} product.`)
-        return
+        throw new UserNoOwner(`You are not the owner of ${id} product.`)
     }
 
     productController.updateProduct(id, req.body, userAuthenticated)
@@ -85,15 +81,13 @@ productsRouter.delete('/:id', [jwtAuthenticate, validateId], processErrors(async
 
     if(product === -1){
         logger.info(`Product id: [${id}] does not exists.`);
-        res.status(404).send(`Product with id: [${id}] does not exist.`);
-        return;
+        throw new ProductNoExists(`Product with id : [${id}] was not found.`)
     }
 
     let userAuthenticated = req.user.username
     if(product.owner !== userAuthenticated){
         logger.info(`User ${userAuthenticated} is not the owner of id ${id}`);
-        res.status(401).send(`You are not the owner of ${id}. You can delete only your products.`)
-        return
+        throw new UserNoOwner(`You are not the owner of ${id}. You can delete only your products.`)
     }
 
     let deletedProduct = await productController.deleteProduct(id)
