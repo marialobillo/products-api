@@ -1,9 +1,11 @@
-const { TestScheduler } = require('jest');
 let request = require('supertest');
 let bcrypt = require('bcrypt');
+let jwt = require('jsonwebtoken');
+
 let User = require('./users.model');
 let app = require('../../../index').app;
 let server = require('../../../index').server;
+let config = require('../../../config');
 
 let dummyUsers = [
     {
@@ -174,6 +176,149 @@ describe('POST /users', () => {
             expect(typeof res.text).toBe('string')
             done()
         })
+    }) 
+
+})
+
+describe('POST /login', () => {
+    test('Login should fail on request without username', (done) => {
+        let bodyLogin = {
+            password: 'hellohello'
+        }
+
+        request(app)
+            .post('/users/login')
+            .send(bodyLogin)
+            .end((error, res) => {
+                expect(res.status).toBe(400)
+                expect(typeof res.text).toBe('string')
+                done()
+            })
     })
 
+    test('Login should failt on request without password', (done) => {
+        let bodyLogin = {
+            username: 'noone'
+        }
+
+        request(app)
+            .post('/users/login')
+            .send(bodyLogin)
+            .end((error, res) => {
+                expect(res.status).toBe(400)
+                expect(typeof res.text).toBe('string')
+                done()
+            })
+
+
+    })
+
+    test('Login should fail is the user is not registered', (done) => {
+        let bodyLogin = {
+            username: 'nouser',
+            password: 'hellohello'
+        }
+
+        request(app)
+            .post('/users/login')
+            .send(bodyLogin)
+            .end((error, res) => {
+                expect(res.status).toBe(400)
+                expect(typeof res.text).toBe('string')
+                done()
+            })
+    })
+
+    test('Login should fail with registered user and wrong password', (done) => {
+        let user = {
+            username: 'peter',
+            email: 'peter@mail.com',
+            password: 'yellowdogs'
+        }
+
+        new User({
+            username: user.username, 
+            email: user.email,
+            password: bcrypt.hashSync(user.password, 10)
+        }).save().then(newUser => {
+            request(app)
+                .post('/users/login')
+                .send({
+                    username: user.username,
+                    password: 'greenrice'
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(400)
+                    expect(typeof res.text).toBe('string')
+                    done()
+                })
+        })
+        .catch(error => {
+            done(error)
+        })
+    })
+
+    test('User registered should have an JWT valid for login', (done) => {
+        let user = {
+            username: 'peter',
+            email: 'peter@mail.com',
+            password: 'yellowdogs'
+        }
+
+        new User({
+            username: user.username,
+            email: user.email,
+            password: bcrypt.hashSync(user.password, 10)
+        }).save().then(newUser => {
+            request(app)
+                .post('/users/login')
+                .send({
+                    username: user.username, 
+                    password: user.password
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(200)
+                    expect(res.body.token).toEqual(jwt.sign(
+                        { id: newUser._id }, 
+                        config.jwt.secret,
+                        { expiresIn: config.jwt.expirantionTime }
+                    ))
+                })
+        }).catch(error => {
+            done(error)
+        })
+    })
+
+    test('Should got the same output about capitalization username', (done) => {
+        let user = {
+            username: 'peter',
+            email: 'peter@mail.com',
+            password: 'yellowdogs'
+        }
+
+        new User({
+            username: user.username,
+            email: user.email,
+            password: bcrypt.hashSync(user.password, 10)
+        }).save().then(newUser => {
+            request(app)
+                .post('/users/login')
+                .send({
+                    username: 'PeTER',
+                    password: user.password
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(200)
+                    expect(res.body.token).toEqual(jwt.sign(
+                        { id: newUser._id },
+                        config.jwt.secret,
+                        { expiresIn: config.jwt.expirantionTime}
+                    ))
+                    done()
+                })
+        })
+        .catch(error => {
+            done(error)
+        })
+    })
 })
