@@ -47,5 +47,27 @@ describe('Products', () => {
                     done()
                 })
         })
+
+        it('Should return the product the it exists successfully', done => {
+            Product(productOnDatabase).save()
+                .then(product => {
+                    request(app)
+                        .get(`/products/${product._id}`)
+                        .end((error, res) => {
+                            expect(res.status).toBe(200)
+                            expect(res.body).toBeInstanceOf(Object)
+                            expect(res.body.title).toEqual(product.title)
+                            expect(res.body.price).toEqual(product.price)
+                            expect(res.body.coin).toEqual(product.coin)
+                            expect(res.body.owner).toEqual(product.owner)
+                            done()
+                        })
+                })
+                .catch(error => {
+                    done(error)
+                })
+        })
+
+
     })
 })
