@@ -138,6 +138,48 @@ describe('Products', () => {
                 .end((error, res) => {
                     expect(res.status).toBe(401)
                     done()
+                }) 
+        })
+
+        it('should not create a product without a title product', done => {
+            request(app)
+                .post('/products')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    coin: newProduct.coin, 
+                    price: newProduct.price
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(400)
+                    done()
+                })
+        })
+
+        it('should not create a product without a price', done => {
+            request(app)
+                .post('/products')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    title: newProduct.title, 
+                    coin: newProduct.coin
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(400)
+                    done()
+                })
+        })
+
+        it('should not create a product without a coin', done => {
+            request(app)
+                .post('/products')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    title: newProduct.title, 
+                    price: newProduct.price
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(400)
+                    done()
                 })
         })
     })
