@@ -17,6 +17,39 @@ let productOnDatabase = {
 
 let idSaved = '5ab8dbcc6539f91c2288b0c1'
 
+let testUser = {
+    username: 'peter',
+    email: 'peter@mail.com',
+    password: 'hello123'
+}
+
+let authToken
+let invalidToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmYjhkZjliNTM4ZGYyYzliMjU5NTVmZiIsImlhdCI6MTYwNjIxMjg3NCwiZXhwIjoxNjA2Mjk5Mjc0fQ.fViS9zWpdphF1mgr7Jn2VHCecLyKAkxdVguminvalidtoken'
+
+const getAuthToken = done => {
+
+    User.remove({}, error => {
+        if(error) done(error)
+        request(app)
+            .post('/users')
+            .send(testUser)
+            .end((error, res) => {
+                expect(res.status).toBe(201)
+                request(app)
+                    .post('/users/login')
+                    .send({
+                        username: testUser.username,
+                        password: testUser.password
+                    })
+                    .end((error, res) => {
+                        expect(res.status).toBe(200)
+                        authToken = res.body.token 
+                        done()
+                    })
+            })
+    })
+}
+
 describe('Products', () => {
 
     beforeEach(done => {
@@ -34,7 +67,7 @@ describe('Products', () => {
             request(app)
                 .get('/products/123')
                 .end((error, res) => {
-                    expect(res.staus).toBe(400)
+                    expect(res.status).toBe(400)
                     done()
                 })
         })
@@ -69,5 +102,19 @@ describe('Products', () => {
         })
 
 
+    })
+
+    describe('POST /products', () => {
+
+        beforeAll(getAuthToken)
+        it('should create a product with a valid token and valid product', done => {
+
+            done()
+        })
+
+        it('should return 401 with invalid token from auth not valid', done => {
+
+            done()
+        })
     })
 })
