@@ -15,6 +15,12 @@ let productOnDatabase = {
     owner: 'peter'
 }
 
+let newProduct = {
+    title: 'Vivobarefoot Primus Bio II',
+    price: 130,
+    coin: 'USD'
+}
+
 let idSaved = '5ab8dbcc6539f91c2288b0c1'
 
 let testUser = {
@@ -109,12 +115,30 @@ describe('Products', () => {
         beforeAll(getAuthToken)
         it('should create a product with a valid token and valid product', done => {
 
-            done()
+            request(app)
+                .post('/products')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send(newProduct)
+                .end((error, res) => {
+                    expect(res.status).toBe(201)
+                    expect(res.body.title).toEqual(newProduct.title)
+                    expect(res.body.price).toEqual(newProduct.price)
+                    expect(res.body.coin).toEqual(newProduct.coin)
+                    expect(res.body.owner).toEqual(testUser.username)
+                    done()
+                })
         })
 
         it('should return 401 with invalid token from auth not valid', done => {
 
-            done()
+            request(app)
+                .post('/products')
+                .set('Authorization', `Bearer ${invalidToken}`)
+                .send(newProduct)
+                .end((error, res) => {
+                    expect(res.status).toBe(401)
+                    done()
+                })
         })
     })
 })
