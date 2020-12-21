@@ -258,5 +258,48 @@ describe('Products', () => {
                 })
         })
 
+        it('should return 401, if the user is not the product owner', done => {
+            Product({
+                title: 'Adidas SolarBoost',
+                price: 95,
+                coin: 'USD',
+                owner: 'jon'
+            }).save()
+                .then(product => {
+                    request(app)
+                        .delete(`/products/${product._id}`)
+                        .set('Authorization', `Bearer ${authToken}`)
+                        .end((error, res) => {
+                            expect(res.status).toBe(401)
+                            expect(res.test.includes('You are not the owner')).toBe(true)
+                            done()
+                        })
+                })
+                .catch(error => {
+                    done(error)
+                })
+        })
+
+        it('should delete the product, the user is the owner and the token is valid', done => {
+            request(app)
+                .delete(`/products/${idSavedProduct}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .end((error, res) => {
+                    expect(res.status).toBe(200)
+                    expect(res.body.title).toEqual(productOnDatabase.title)
+                    expect(res.body.price).toEqual(productOnDatabase.price)
+                    expect(res.body.coin).toEqual(productOnDatabase.coin)
+                    expect(res.body.owner).toEqual(productOnDatabase.owner)
+                    Product.findById(idSavedProduct)
+                        .then(product => {
+                            expect(product).toBeNull()
+                            done()
+                        })
+                        .catch(error => {
+                            done(error)
+                        })
+                })
+        })
+
     })
 })
