@@ -216,5 +216,25 @@ describe('Products', () => {
         })
 
 
+        it('Should return 400 if we try to delete a not exist product', done => {
+            request(app)
+                .delete(`/product/${idNotSavedProduct}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .end((error, res) => {
+                    expect(res.status).toBe(404)
+                    done()
+                })
+        })
+
+        it('Should return 401 if user send a invalid token', done => {
+            request(app)
+                .delete(`/products/${idSavedProduct}`)
+                .set('Authorization', `Bearer ${invalidToken}`)
+                .end((error, res) => {
+                    expect(res.status).toBe(401)
+                    done()
+                })
+        })
+
     })
 })
