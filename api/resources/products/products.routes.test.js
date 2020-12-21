@@ -236,5 +236,27 @@ describe('Products', () => {
                 })
         })
 
+        it('should return 401, if the user is not the product owner', done => {
+            Product({
+                title: 'Adidas SolarBoost',
+                price: 95,
+                coin: 'USD',
+                owner: 'jon'
+            }).save()
+                .then(product => {
+                    request(app)
+                        .delete(`/products/${product._id}`)
+                        .set('Authorization', `Bearer ${authToken}`)
+                        .end((error, res) => {
+                            expect(res.status).toBe(401)
+                            expect(res.test.includes('You are not the product owner')).toBe(true)
+                            done()
+                        })
+                })
+                .catch(error => {
+                    done(error)
+                })
+        })
+
     })
 })
