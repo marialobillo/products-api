@@ -183,4 +183,27 @@ describe('Products', () => {
                 })
         })
     })
+
+    describe('DELETE /products/:id', () => {
+
+        let idSavedProduct
+
+        beforeAll(getAuthToken)
+
+        beforeEach(done => {
+            Product.remove({}, error => {
+                if(error) done(error)
+                Product(productOnDatabase).save()
+                    .then(product => {
+                        idSavedProduct = product._id
+                        done()
+                    })
+                    .catch(error => {
+                        done(error)
+                    })
+            })
+        })
+
+
+    })
 })
