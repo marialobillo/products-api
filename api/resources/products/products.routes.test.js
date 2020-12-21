@@ -205,5 +205,16 @@ describe('Products', () => {
         })
 
 
+        it('should return 400 try to get a producto with an invalid id', done => {
+            request(app)
+                .delete('/products/123')
+                .set('Authorization', `Bearer ${authToken}`)
+                .end((error, res) => {
+                    expect(res.status).toBe(400)
+                    done()
+                })
+        })
+
+
     })
 })
