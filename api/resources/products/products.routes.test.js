@@ -204,7 +204,6 @@ describe('Products', () => {
             })
         })
 
-
         it('should return 400 try to get a producto with an invalid id', done => {
             request(app)
                 .delete('/products/123')
@@ -214,7 +213,6 @@ describe('Products', () => {
                     done()
                 })
         })
-
 
         it('Should return 400 if we try to delete a not exist product', done => {
             request(app)
@@ -233,28 +231,6 @@ describe('Products', () => {
                 .end((error, res) => {
                     expect(res.status).toBe(401)
                     done()
-                })
-        })
-
-        it('should return 401, if the user is not the product owner', done => {
-            Product({
-                title: 'Adidas SolarBoost',
-                price: 95,
-                coin: 'USD',
-                owner: 'jon'
-            }).save()
-                .then(product => {
-                    request(app)
-                        .delete(`/products/${product._id}`)
-                        .set('Authorization', `Bearer ${authToken}`)
-                        .end((error, res) => {
-                            expect(res.status).toBe(401)
-                            expect(res.test.includes('You are not the product owner')).toBe(true)
-                            done()
-                        })
-                })
-                .catch(error => {
-                    done(error)
                 })
         })
 
@@ -302,4 +278,113 @@ describe('Products', () => {
         })
 
     })
+
+    describe('PUT /products/:id', () => {
+
+        let idSavedProduct
+
+        beforeAll(getAuthToken)
+
+        beforeEach(done => {
+            Product.remove({}, error => {
+                if(error) done(error)
+                Product(productOnDatabase).save()
+                    .then(product => {
+                        idSavedProduct = product._id
+                        done()
+                    })
+                    .catch(error => {
+                        done(error)
+                    })
+            })
+        })
+
+        it('should not update the product without a title product', done => {
+            request(app)
+                .put(`/products/${idSavedProduct}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    coin: newProduct.coin, 
+                    price: newProduct.price
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(400)
+                    done()
+                })
+        })
+
+        it('should not update the product without a price', done => {
+            request(app)
+            .put(`/products/${idSavedProduct}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    title: newProduct.title, 
+                    coin: newProduct.coin
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(400)
+                    done()
+                })
+        })
+
+        it('should not update the product without a coin', done => {
+            request(app)
+            .put(`/products/${idSavedProduct}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({
+                    title: newProduct.title, 
+                    price: newProduct.price
+                })
+                .end((error, res) => {
+                    expect(res.status).toBe(400)
+                    done()
+                })
+        })
+
+        it('should update the product, the user is the owner and the token is valid', done => {
+            request(app)
+                .put(`/products/${idSavedProduct}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .end((error, res) => {
+                    expect(res.status).toBe(200)
+                    expect(res.body.title).toEqual(productOnDatabase.title)
+                    expect(res.body.price).toEqual(productOnDatabase.price)
+                    expect(res.body.coin).toEqual(productOnDatabase.coin)
+                    expect(res.body.owner).toEqual(productOnDatabase.owner)
+                    Product.findById(idSavedProduct)
+                        .then(product => {
+                            expect(product).not.toBeNull()
+                            done()
+                        })
+                        .catch(error => {
+                            done(error)
+                        })
+                })
+        })
+
+
+        it('should return 401, if the user is not the product owner', done => {
+            Product({
+                title: 'Adidas SolarBoost',
+                price: 95,
+                coin: 'USD',
+                owner: 'jon'
+            }).save()
+                .then(product => {
+                    request(app)
+                        .put(`/products/${product._id}`)
+                        .set('Authorization', `Bearer ${authToken}`)
+                        .end((error, res) => {
+                            expect(res.status).toBe(401)
+                            expect(res.test.includes('You are not the owner')).toBe(true)
+                            done()
+                        })
+                })
+                .catch(error => {
+                    done(error)
+                })
+        })
+
+    })
+
 })
